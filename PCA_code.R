@@ -10,13 +10,16 @@ colnames(evidence) <- gsub("_SPC", "", colnames(evidence))
 evidence.mat <- as.matrix(evidence)
 pca.proteinRun <- prcomp(t(evidence.mat))
 pcaDT <- as.data.table(pca.proteinRun$x, keep.rownames=TRUE)
+pcaPercentDev <- round(100 * (pca.proteinRun$sdev)^2/sum((pca.proteinRun$sdev)^2), 1)
 
 library(ggplot2)
 library(ggrepel)
 ggplot (pcaDT, aes(x=PC1, y=PC2, col = "red")) + 
   geom_point(alpha=0.8, size=7) + theme_bw() + 
   ggtitle ("PCA") + 
-  geom_text(aes(label=rn), col = "black", size = 4)
+  geom_text(aes(label=rn), col = "black", size = 4)+ 
+  xlab (sprintf ("PC1, %.1f%%", pcaPercentDev[1])) + 
+  ylab (sprintf ("PC2, %.1f%%", pcaPercentDev[2]))
 ggsave("PCA.pdf", width = 8, height = 6)
 
 
@@ -32,6 +35,8 @@ ggplot(pcaDT, aes(PC1, PC2)) + #, color=condition, shape=condition
   ) +
   labs(title = "Principal Component Analysis",
        fill = "") +
-  theme_linedraw()
+  theme_linedraw()+ 
+  xlab (sprintf ("PC1, %.1f%%", pcaPercentDev[1])) + 
+  ylab (sprintf ("PC2, %.1f%%", pcaPercentDev[2]))
 ggsave("PCA1.pdf", width = 8, height = 6)
 
