@@ -44,12 +44,12 @@ evidence <- read.table(file = "/Users/yzhou/Downloads/A3_PPI_Interactome/MaxQuan
 
 
 #QC
-dir.create(paste(outdir, "/QC Extended", sep = ""))
+# dir.create(paste(outdir, "/QC Extended", sep = ""))
 setwd(paste(outdir, "/QC Extended", sep = ""))
 artmsQualityControlEvidenceExtended(evidence_file="/Users/yzhou/Downloads/A3_PPI_Interactome/MaxQuant_20200910/evidence.txt",
                                     keys_file="/Users/yzhou/Downloads/A3_PPI_Interactome/Keys_File_noGFPRNAse_3.txt")
 
-dir.create(paste(outdir, "/QC Basic", sep = ""))
+# dir.create(paste(outdir, "/QC Basic", sep = ""))
 setwd(paste(outdir, "/QC Basic", sep = ""))
 artmsQualityControlEvidenceBasic(evidence_file="/Users/yzhou/Downloads/A3_PPI_Interactome/MaxQuant_20200910/evidence.txt",
                                  keys_file="/Users/yzhou/Downloads/A3_PPI_Interactome/Keys_File_noGFPRNAse_3.txt",
@@ -296,12 +296,21 @@ system(paste("Rscript /Users/yzhou/Downloads/private.mist/main.R -c ", paste(out
 # baits=read.table(file.choose(),header=F,sep="\t")
 interactions=read.table(file="/Users/yzhou/Downloads/A3_PPI_Interactome/msspc/A3_spectral_counts-saint-interactions.txt",
                         header=F,sep="\t",stringsAsFactors = F)
+interactions <- reshape2::dcast(interactions, V1 + V2 ~ V3, value.var = "V4", fill = 0)
+interactions <- reshape2::melt(interactions, id.vars = c("V1", "V2"), measure.vars = colnames(interactions)[3:ncol(interactions)])
+interactions_agg <- aggregate(interactions$value, by=list(V2 = interactions$V2, variable = interactions$variable), FUN=sum)
+interactions_agg <- interactions_agg[which(interactions_agg$x != 0), ]
+interactions_agg$V2_variable <- paste(interactions_agg$V2, interactions_agg$variable, sep = "-")
+interactions$V2_variable <- paste(interactions$V2, interactions$variable, sep = "-")
+interactions <- interactions[which(interactions$V2_variable %in% interactions_agg$V2_variable), ]
+interactions <- interactions[, -which(colnames(interactions) == "V2_variable")]
 
 #R shiny
 input=interactions
 colnames(input)=c("Replicate","Bait","Prey","Spectral.Count")
 Experiment.ID=input$Bait
 input=cbind(Experiment.ID,input)
+input$Prey <- as.character(input$Prey)
 write.table(input,paste(outdir, "/CompPASS_Rshiny_input.txt",sep = ""),sep="\t",row.names = F, quote = F)
 
 library(cRomppass)
