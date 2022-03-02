@@ -71,6 +71,38 @@ library(clusterProfiler)
 library(RColorBrewer)
 library(tidyr)
 # enrichment
+
+#' Compute an odds ratio using the text columns GeneRatio and BgRatio from the typical clusterProfiler output
+#' The odds ratio is the ratio of odds between the selected and not selected groups for matching the term or not.
+#' Thus we have to compute three numbers from GeneRatio and BgRatio:
+#'     selectNoTerm:      those in our selection that don't match the term
+#'     notSelectWiTerm:   those not selected that match the term
+#'     notSelectNoTerm:   those not selected that don't match the term.
+#' @param GeneRatio text column with entries in format 12/200 where 200 is the number of selected genes and 12 the number of those that match the term
+#' @param BgRatio  text column with entries in format 120/2000 where 2000 is the number genes in the universe and 120 the number of those that match the term 
+#' 
+#' @return  a numeric vector of odds ratios, >1 implies more term matches observed in selected set than expected
+#' 
+OddsRatioFromEnricherRatios <- function (GeneRatio, BgRatio){
+  selectParts <- tstrsplit(GeneRatio, "/")
+  selectWiTerm <- as.integer(selectParts[[1]])
+  selectTotal <- as.integer(selectParts[[2]])
+  selectNoTerm <- selectTotal - selectWiTerm  #
+  
+  bgParts <- tstrsplit(BgRatio, "/")
+  bgWiTerm <- as.integer(bgParts[[1]])
+  bgTotal <- as.integer (bgParts[[2]])
+  bgNoTerm <- bgTotal - bgWiTerm
+  
+  notSelectWiTerm <- bgWiTerm - selectWiTerm  #
+  notSelectNoTerm <- bgNoTerm - selectNoTerm  #
+  
+  oddsRatio <- (selectWiTerm/selectNoTerm)/
+    (notSelectWiTerm/notSelectNoTerm)
+  
+  return (oddsRatio)
+}
+
 enrichment <- function(gene, universe)
 {
   out_tab <- NULL
@@ -102,9 +134,10 @@ enrichment <- function(gene, universe)
   # 
   # out_tab <- rbind(out_tab, ke_df)
   
-  gene_ratio <- t(as.data.frame( lapply(out_tab$GeneRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
-  bg_ratio <- t(as.data.frame( lapply(out_tab$BgRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
-  odds_ratio <- (gene_ratio[,1]/gene_ratio[,2])/((bg_ratio[,1]-gene_ratio[,1])/(bg_ratio[,2]-gene_ratio[,2])); names(odds_ratio) <- NULL
+  # gene_ratio <- t(as.data.frame( lapply(out_tab$GeneRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
+  # bg_ratio <- t(as.data.frame( lapply(out_tab$BgRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
+  # odds_ratio <- (gene_ratio[,1]/gene_ratio[,2])/((bg_ratio[,1]-gene_ratio[,1])/(bg_ratio[,2]-gene_ratio[,2])); names(odds_ratio) <- NULL
+  odds_ratio <- OddsRatioFromEnricherRatios(out_tab$GeneRatio, out_tab$BgRatio)
   out_tab$odds_ratio <- odds_ratio
   
   # ## change ID in out_tab
@@ -1313,10 +1346,10 @@ enrichment_entrez <- function(gene, universe)
   
   out_tab <- rbind(out_tab, ke_df)
   
-  gene_ratio <- t(as.data.frame( lapply(out_tab$GeneRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
-  bg_ratio <- t(as.data.frame( lapply(out_tab$BgRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
-  odds_ratio <- (gene_ratio[,1]/gene_ratio[,2])/((bg_ratio[,1]-gene_ratio[,1])/(bg_ratio[,2]-gene_ratio[,2])); names(odds_ratio) <- NULL
-  out_tab$odds_ratio <- odds_ratio
+  # gene_ratio <- t(as.data.frame( lapply(out_tab$GeneRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
+  # bg_ratio <- t(as.data.frame( lapply(out_tab$BgRatio, function(x){as.numeric(trimws(unlist(strsplit(x, split = "/"))))}) ))
+  # odds_ratio <- (gene_ratio[,1]/gene_ratio[,2])/((bg_ratio[,1]-gene_ratio[,1])/(bg_ratio[,2]-gene_ratio[,2])); names(odds_ratio) <- NULL
+  # out_tab$odds_ratio <- odds_ratio
   
   return(out_tab)
 }
