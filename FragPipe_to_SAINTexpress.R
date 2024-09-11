@@ -85,9 +85,13 @@ spc_long$Condition <- gsub("\\-.*", "", spc_long$BioReplicate)
 # spc_long$BioReplicate <- paste(spc_long$Condition, spc_long$BioReplicate, sep = "-")
 # check contaminate and remove
 if(length(contaminate) == 1){
-  spc_long <- spc_long[-which(spc_long$PROTID == contaminate), ]
+  if(length(which(spc_long$PROTID == contaminate)) != 0){
+    spc_long <- spc_long[-which(spc_long$PROTID == contaminate), ]
+  }
 }else{
-  spc_long <- spc_long[-which(spc_long$PROTID %in% contaminate), ]
+  if(length(which(spc_long$PROTID %in% contaminate)) != 0){
+    spc_long <- spc_long[-which(spc_long$PROTID %in% contaminate), ]
+  }
 }
 # remove samples didn't pass QC
 if(length(runsToSkip) > 0){
@@ -138,14 +142,18 @@ int_long <- reshape2::melt(int, id.vars = c("PROTID", "GENEID"))
 int_long$variable <- as.character(int_long$variable)
 int_long$value <- as.numeric(int_long$value)
 int_long$variable <- gsub("_INT", "", int_long$variable)
-int_long$BioReplicate <- gsub(".*_", "", int_long$variable)
-int_long$Condition <- sub('_[^_]*$', '', int_long$variable)
-int_long$BioReplicate <- paste(int_long$Condition, int_long$BioReplicate, sep = "-")
+# change the last _ to -
+int_long$BioReplicate <- sub("_(?=[^_]*$)", "-", int_long$variable, perl=TRUE)
+int_long$Condition <- gsub("\\-.*", "", int_long$BioReplicate)
 # check contaminate and remove
 if(length(contaminate) == 1){
-  int_long <- int_long[-which(int_long$PROTID == contaminate), ]
+  if(length(which(int_long$PROTID == contaminate)) != 0){
+    int_long <- int_long[-which(int_long$PROTID == contaminate), ]
+  }
 }else{
-  int_long <- int_long[-which(int_long$PROTID %in% contaminate), ]
+  if(length(which(int_long$PROTID %in% contaminate)) != 0){
+    int_long <- int_long[-which(int_long$PROTID %in% contaminate), ]
+  }
 }
 # remove samples didn't pass QC
 if(length(runsToSkip) > 0){
