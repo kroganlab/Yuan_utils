@@ -42,11 +42,12 @@ make_exclusion_criteria_MIST = function(in_file){
   # Load data
   D = fread(in_file)
   nums = unique(D$Batch)[unique(D$Batch)>0]
+  D_final <- data.frame()
   
   for (i in nums){
     samples = D$Sample[D$Batch==nums[i]]
     a=permutations(n = length(samples), r = length(samples), v = samples, repeats.allowed = FALSE)
-    
+     
     # Remove duplications
     a = a[!duplicated(a[,1]),]
     
@@ -57,11 +58,12 @@ make_exclusion_criteria_MIST = function(in_file){
     
     # Create final data.frame
     if (i==1){
-    D_final = data.frame(V1 = a[,1],V2 = vec)
+      D_final = data.frame(V1 = a[,1],V2 = vec)
     } else {
       D_final = rbind(D_final,data.frame(V1 = a[,1],V2 = vec))
     }
   }
+  return(D_final)
 }
 
 fwrite(D_final,file="exclusion_criteria_Ready.txt",sep='\t',col.names=F)
