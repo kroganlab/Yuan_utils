@@ -46,10 +46,24 @@ make_exclusion_criteria_MIST = function(in_file){
   
   for (i in nums){
     samples = D$Sample[D$Batch==nums[i]]
-    a=permutations(n = length(samples), r = length(samples), v = samples, repeats.allowed = FALSE)
-     
+    
+    a <- data.frame(V1 = samples)
+    
+    b <- sapply(samples, function(x){
+      x1 <- samples[-which(samples == x)]
+      return(x1)
+    })
+    
+    if(is.null(nrow(b))){
+      a <- as.matrix(cbind(a, b))
+    }else{
+      a <- as.matrix(cbind(a, t(b)))
+    }
+    
+    # a=permutations(n = length(samples), r = length(samples), v = samples, repeats.allowed = FALSE)
+    
     # Remove duplications
-    a = a[!duplicated(a[,1]),]
+    # a = a[!duplicated(a[,1]),]
     
     vec = rep(NA,nrow=nrow(a))
     for (n in 1:nrow(a)){
@@ -66,6 +80,6 @@ make_exclusion_criteria_MIST = function(in_file){
   return(D_final)
 }
 
-fwrite(D_final,file="exclusion_criteria_Ready.txt",sep='\t',col.names=F)
+# fwrite(D_final,file="exclusion_criteria_Ready.txt",sep='\t',col.names=F)
 
 
