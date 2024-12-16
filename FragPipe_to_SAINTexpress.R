@@ -197,8 +197,44 @@ file.copy(from="/PATH_TO_PROJECT_DIR/msspc/spectral_counts-saint-preys.txt",
           overwrite = TRUE, recursive = FALSE, 
           copy.mode = TRUE)
 
+#CompPASS
+# preys=read.table(file.choose(),header=F,sep="\t")
+# baits=read.table(file.choose(),header=F,sep="\t")
+interactions=read.table(file="/PATH_TO_PROJECT_DIR/msspc/spectral_counts-saint-interactions.txt", header=F,sep="\t",stringsAsFactors = F)
+interactions <- reshape2::dcast(interactions, V1 + V2 ~ V3, value.var = "V4", fill = 0)
+interactions <- reshape2::melt(interactions, id.vars = c("V1", "V2"), measure.vars = colnames(interactions)[3:ncol(interactions)])
+interactions_agg <- aggregate(interactions$value, by=list(V2 = interactions$V2, variable = interactions$variable), FUN=sum)
+interactions_agg <- interactions_agg[which(interactions_agg$x != 0), ]
+interactions_agg$V2_variable <- paste(interactions_agg$V2, interactions_agg$variable, sep = "-")
+interactions$V2_variable <- paste(interactions$V2, interactions$variable, sep = "-")
+interactions <- interactions[which(interactions$V2_variable %in% interactions_agg$V2_variable), ]
+interactions <- interactions[, -which(colnames(interactions) == "V2_variable")]
 
+#R shiny
+input=interactions
+colnames(input)=c("Replicate","Bait","Prey","Spectral.Count")
+Experiment.ID=input$Bait
+input=cbind(Experiment.ID,input)
+input$Prey <- as.character(input$Prey)
+write.table(input,paste("/PATH_TO_PROJECT_DIR", "/CompPASS_Rshiny_input.txt",sep = ""),sep="\t",row.names = F, quote = F)
 
+library(cRomppass)
+SPCwStats.results.noNaN <- comppass(input, stats = NULL, norm.factor = 0.98)
+
+#it's just a few lines of code to do the percentile by bait analysis on the compPASS output file.
+#Note, sometimes you get NaN values in the compPASS output file, these need to be replaced with Inf prior to running these few lines of code.
+library(dplyr)
+#SPCwStats.results.noNaN=read.table(file="/Users/yzhou/Downloads/Roche/JGZ04/RSV-P/comppass_scores.tsv",header=T,sep="\t")
+SPCwStats.results.noNaN[is.na(SPCwStats.results.noNaN)]=Inf
+# Create columns that give the Percentile for each WD and Z score
+SPCwStats.results.noNaN.wide = SPCwStats.results.noNaN %>% mutate(wd_percentile = percent_rank(WD), z_percentile = percent_rank(Z) ) %>%
+  
+  # group by the Baits so we can get the Percentile PER Bait for WD and Z scores
+  group_by(Bait) %>%
+  mutate(wd_percentile_perBait = percent_rank(WD), z_percentile_perBait = percent_rank(Z) ) %>%
+  data.frame(stringsAsFactors=F)
+
+write.table(SPCwStats.results.noNaN.wide, paste("PATH_TO_PROJECT_DIR", "/spc_comppass_scores_percentile.txt",sep = ""), quote=F, row.names=F, sep='\t')
 
 
 
