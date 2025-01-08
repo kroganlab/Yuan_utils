@@ -22,7 +22,7 @@ x <- list(
   vsNeg = unique(result_vsNeg$Protein[which(result_vsNeg$Label == "Af02-Neg02")]), 
   vsSVP0 = unique(result_vsSVP0$Protein[which(result_vsSVP0$Label == "Af02-Af0")])
 )
-plot(euler(x, shape = "ellipse"), quantities = TRUE, main = "SVP 0.2")
+plot(euler(x, shape = "ellipse"), quantities = list(type = c('counts',"percent")), main = "SVP 0.2")
 x <- list(
   # ADPr_DB = ADPr_DB, 
   ADPr_PARP = ADPr_PARP, 
