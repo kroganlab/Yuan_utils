@@ -71,7 +71,7 @@ make_exclusion_criteria_MIST = function(in_file){
     }
     
     # Create final data.frame
-    if (i==1){
+    if (which(nums == i)==1){
       D_final = data.frame(V1 = a[,1],V2 = vec)
     } else {
       D_final = rbind(D_final,data.frame(V1 = a[,1],V2 = vec))
