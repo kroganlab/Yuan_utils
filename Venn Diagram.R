@@ -38,3 +38,9 @@ x <- list(
 )
 plot(euler(x, shape = "ellipse"), quantities = TRUE, main = "SVP 1")
 dev.off()
+
+# more than 4 groups
+library(venn)
+venn(x, ilabels = "counts",
+     zcolor = "style", size = 25, cexil = 3, cexsn = 3)
+
