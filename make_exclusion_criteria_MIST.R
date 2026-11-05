@@ -45,7 +45,7 @@ make_exclusion_criteria_MIST = function(in_file){
   D_final <- data.frame()
   
   for (i in nums){
-    samples = D$Sample[D$Batch==nums[i]]
+    samples = D$Sample[D$Batch == i]
     
     a <- data.frame(V1 = samples)
     
